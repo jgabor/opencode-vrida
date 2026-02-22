@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Button Design Rig — Vrida</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #0A0A0A; --ink: #141414; --charcoal: #1C1C1C; --graphite: #2A2A2A;
+      --steel: #444; --ash: #666; --silver: #999; --fog: #CCC;
+      --bone: #E8E8E8; --white: #F5F5F5; --pure: #FFFFFF;
+      --accent: #FF3D00; --accent-dim: rgba(255,61,0,0.12);
+      --cyan: #00E5CC; --cyan-dim: rgba(0,229,204,0.10);
+      --border: #2A2A2A;
+      --font-display: 'Space Grotesk','Helvetica Neue','Arial Black',sans-serif;
+      --font-body: 'IBM Plex Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+      --font-mono: 'IBM Plex Mono','JetBrains Mono','SF Mono',Consolas,monospace;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    body { font-family: var(--font-body); background: var(--black); color: var(--white); height: 100vh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
+
+    header { background: var(--ink); padding: 0 24px; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 10; height: 52px; }
+    header h1 { font-family: var(--font-display); font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; display: flex; align-items: center; gap: 10px; }
+    .title-mark { display: inline-block; width: 3px; height: 18px; background: var(--accent); }
+
+    .presets { display: flex; gap: 2px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-left: auto; }
+    .presets::-webkit-scrollbar { display: none; }
+    .presets button { background: transparent; color: var(--silver); border: none; padding: 6px 14px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; cursor: pointer; transition: color 0.15s, background 0.15s; white-space: nowrap; letter-spacing: 0.02em; position: relative; }
+    .presets button:hover { color: var(--white); background: var(--graphite); }
+    .presets button.active { color: var(--accent); background: var(--accent-dim); }
+    .presets button.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent); }
+
+    .main { display: grid; grid-template-columns: clamp(260px,32%,360px) 1fr; flex: 1; overflow: hidden; }
+
+    .controls { background: var(--ink); border-right: 1px solid var(--border); overflow-y: auto; padding: 20px; scrollbar-width: thin; scrollbar-color: var(--graphite) transparent; }
+    .controls::-webkit-scrollbar { width: 4px; }
+    .controls::-webkit-scrollbar-track { background: transparent; }
+    .controls::-webkit-scrollbar-thumb { background: var(--graphite); }
+
+    .control-group { margin-bottom: 28px; animation: fadeIn 0.4s ease-out both; }
+    .control-group:nth-child(1) { animation-delay: 0.05s; }
+    .control-group:nth-child(2) { animation-delay: 0.10s; }
+    .control-group:nth-child(3) { animation-delay: 0.15s; }
+    .control-group:nth-child(4) { animation-delay: 0.20s; }
+    .control-group h3 { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ash); margin-bottom: 14px; font-weight: 500; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+    .control-row { margin-bottom: 12px; }
+    .control-row label { display: flex; justify-content: space-between; font-size: 12px; color: var(--fog); margin-bottom: 5px; font-weight: 500; }
+    .control-row label .value { color: var(--accent); font-family: var(--font-mono); font-size: 11px; }
+
+    input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: var(--graphite); outline: none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--pure); cursor: pointer; border: 2px solid var(--accent); transition: background 0.12s; }
+    input[type="range"]::-webkit-slider-thumb:hover { background: var(--accent); }
+    input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; background: var(--pure); cursor: pointer; border: 2px solid var(--accent); border-radius: 0; }
+
+    select, input[type="text"] { width: 100%; background: var(--black); border: 1px solid var(--border); color: var(--pure); padding: 8px 10px; border-radius: 0; font-size: 13px; font-family: var(--font-body); transition: border-color 0.15s; outline: none; }
+    select:focus, input[type="text"]:focus { border-color: var(--accent); }
+    select { cursor: pointer; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23999'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+
+    input[type="color"] { width: 100%; background: var(--black); border: 1px solid var(--border); padding: 2px 6px; height: 32px; cursor: pointer; border-radius: 0; }
+    .color-row { margin-bottom: 12px; }
+    .color-row label { display: flex; justify-content: space-between; font-size: 12px; color: var(--fog); margin-bottom: 5px; font-weight: 500; }
+    .color-row .hex { font-family: var(--font-mono); font-size: 11px; color: var(--silver); }
+
+    details { animation: fadeIn 0.4s ease-out 0.20s both; }
+    details summary { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ash); cursor: pointer; font-weight: 500; padding-bottom: 6px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+
+    .preview { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; overflow-y: auto; padding: 40px; background: var(--black); }
+    .preview-canvas { background: var(--charcoal); border: 1px solid var(--border); padding: 48px; min-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 32px; }
+    .preview-states { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+    .state-col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .state-label { font-family: var(--font-mono); font-size: 10px; color: var(--ash); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
+
+    .css-output { width: 100%; margin-top: 32px; background: var(--black); border: 1px solid var(--border); overflow: hidden; }
+    .css-header { padding: 8px 14px; background: var(--charcoal); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .css-header span { font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ash); text-transform: uppercase; letter-spacing: 0.1em; }
+    .css-header button { background: none; border: none; color: var(--accent); font-family: var(--font-mono); font-size: 10px; font-weight: 600; cursor: pointer; padding: 2px 6px; transition: opacity 0.12s; letter-spacing: 0.04em; text-transform: uppercase; }
+    .css-header button:hover { opacity: 0.7; }
+    .css-output pre { padding: 14px; margin: 0; color: var(--fog); font-family: var(--font-mono); font-size: 12px; line-height: 1.6; overflow-x: auto; tab-size: 2; }
+
+    .prompt-bar { background: var(--ink); border-top: 1px solid var(--border); padding: 12px 24px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; z-index: 10; max-height: 260px; }
+    .prompt-header { display: flex; justify-content: space-between; align-items: center; }
+    .prompt-title { font-family: var(--font-mono); font-size: 10px; color: var(--ash); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 500; }
+    .prompt-bar pre { flex: 1; width: 100%; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--fog); overflow-y: auto; max-height: 160px; font-family: var(--font-mono); background: var(--black); padding: 12px 14px; border: 1px solid var(--border); margin: 0; scrollbar-width: thin; scrollbar-color: var(--graphite) transparent; }
+    #copy-btn { background: var(--pure); color: var(--black); border: none; padding: 5px 16px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.12s; letter-spacing: 0.04em; text-transform: uppercase; }
+    #copy-btn:hover { background: var(--accent); color: var(--pure); }
+    #copy-btn.copied { background: var(--cyan); color: var(--black); }
+
+    .panel-tabs { display: none; }
+    @media (max-width: 640px) {
+      .panel-tabs { display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 56px; background: var(--ink); border-top: 1px solid var(--border); z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+      .panel-tab { flex: 1; padding: 6px 4px 8px; background: none; border: none; color: var(--steel); font-family: var(--font-mono); font-size: 9px; font-weight: 600; cursor: pointer; border-top: 2px solid transparent; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; letter-spacing: 0.1em; text-transform: uppercase; }
+      .panel-tab .tab-icon { font-size: 16px; line-height: 1; }
+      .panel-tab.active { color: var(--accent); border-top-color: var(--accent); }
+      header { flex-wrap: wrap; padding: 0 16px; height: auto; min-height: 48px; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+      header h1 { font-size: 12px; }
+      .presets { width: 100%; margin-left: 0; gap: 0; }
+      .presets button { font-size: 10px; padding: 4px 10px; }
+      .main { display: flex; flex-direction: column; flex: 1; height: auto; }
+      .controls { width: 100%; border-right: none; }
+      .panel { display: none; }
+      .controls.panel.active { display: block; flex: 1; overflow-y: auto; padding-bottom: 76px; }
+      .preview.panel.active { display: flex; flex: 1; padding: 20px 16px 76px; }
+      .prompt-bar { display: none; border-top: none; }
+      .prompt-bar.panel.active { display: flex; flex: 1; max-height: none; padding-bottom: 76px; }
+      .prompt-bar.panel.active pre { max-height: none; }
+      body[data-active-panel="prompt"] .main { display: none; }
+      .preview-canvas { min-width: auto; padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span class="title-mark"></span>Button Design</h1>
+    <div class="presets" id="presets"></div>
+  </header>
+  <div class="panel-tabs">
+    <button class="panel-tab active" data-panel="controls" onclick="showPanel('controls')"><span class="tab-icon">—</span>Define</button>
+    <button class="panel-tab" data-panel="preview" onclick="showPanel('preview')"><span class="tab-icon">◻</span>Preview</button>
+    <button class="panel-tab" data-panel="prompt" onclick="showPanel('prompt')"><span class="tab-icon">▤</span>Prompt</button>
+  </div>
+  <div class="main">
+    <div class="controls panel active" id="panel-controls"></div>
+    <div class="preview panel" id="panel-preview"></div>
+  </div>
+  <div class="prompt-bar panel" id="panel-prompt">
+    <div class="prompt-header">
+      <span class="prompt-title">Generated Prompt</span>
+      <button id="copy-btn" onclick="copyPrompt()">Copy</button>
+    </div>
+    <pre id="prompt-text"></pre>
+  </div>
+
+  <script>
+    const DEFAULTS = Object.freeze({
+      borderRadius: 8, paddingH: 16, paddingV: 10,
+      borderWidth: 1, borderStyle: 'solid',
+      bgColor: '#3b82f6', textColor: '#ffffff',
+      borderColor: '#2563eb', hoverBgColor: '#2563eb',
+      fontFamily: 'sans-serif', fontSize: 16, fontWeight: '500',
+      textTransform: 'none', letterSpacing: 0,
+      shadow: 'none', opacity: 1, transitionDuration: 150, cursor: 'pointer'
+    });
+
+    const SHADOW_MAP = {
+      none: 'none',
+      subtle: '0 1px 3px rgba(0,0,0,0.2)',
+      medium: '0 4px 12px rgba(0,0,0,0.3)',
+      pronounced: '0 8px 24px rgba(0,0,0,0.4)'
+    };
+
+    const PRESETS = {
+      Minimal: { borderRadius: 2, shadow: 'none', borderWidth: 1, fontSize: 14, fontWeight: '400', paddingH: 12, paddingV: 8 },
+      Rounded: { borderRadius: 9999, shadow: 'subtle', borderWidth: 0, fontSize: 16, fontWeight: '500' },
+      Bold: { borderRadius: 8, shadow: 'pronounced', fontSize: 20, fontWeight: '700', paddingH: 28, paddingV: 14 },
+      Ghost: { bgColor: 'transparent', textColor: '#3b82f6', borderColor: '#3b82f6', hoverBgColor: 'rgba(59,130,246,0.1)', borderWidth: 2, shadow: 'none' },
+      Corporate: { borderRadius: 4, shadow: 'medium', fontSize: 14, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1.5 }
+    };
+
+    const state = { ...DEFAULTS };
+    let activePreset = null;
+
+    function buildControls() {
+      const c = document.getElementById('panel-controls');
+      c.innerHTML = `
+        <div class="control-group"><h3>Shape & Spacing</h3>
+          ${slider('borderRadius', 'Border Radius', 0, 32, 1, 'px')}
+          ${slider('paddingH', 'Padding H', 4, 48, 2, 'px')}
+          ${slider('paddingV', 'Padding V', 2, 32, 2, 'px')}
+          ${slider('borderWidth', 'Border Width', 0, 4, 1, 'px')}
+          ${dropdown('borderStyle', 'Border Style', ['solid','dashed','dotted','none'])}
+        </div>
+        <div class="control-group"><h3>Colors</h3>
+          ${colorPick('bgColor', 'Background')}
+          ${colorPick('textColor', 'Text')}
+          ${colorPick('borderColor', 'Border')}
+          ${colorPick('hoverBgColor', 'Hover BG')}
+        </div>
+        <div class="control-group"><h3>Typography</h3>
+          ${dropdown('fontFamily', 'Font', ['sans-serif','monospace','serif'])}
+          ${slider('fontSize', 'Size', 10, 28, 1, 'px')}
+          ${dropdown('fontWeight', 'Weight', ['300','400','500','600','700'])}
+          ${dropdown('textTransform', 'Transform', ['none','uppercase','lowercase','capitalize'])}
+          ${slider('letterSpacing', 'Letter Spacing', -1, 4, 0.5, 'px')}
+        </div>
+        <details><summary>Effects</summary>
+          ${dropdown('shadow', 'Shadow', ['none','subtle','medium','pronounced'])}
+          ${slider('opacity', 'Opacity', 0.1, 1, 0.05, '')}
+          ${slider('transitionDuration', 'Transition', 0, 500, 25, 'ms')}
+          ${dropdown('cursor', 'Cursor', ['pointer','default','not-allowed'])}
+        </details>`;
+      c.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', () => {
+          const k = el.dataset.key;
+          state[k] = el.type === 'range' ? parseFloat(el.value) : el.value;
+          if (el.type === 'range') el.closest('.control-row').querySelector('.value').textContent = el.value + (el.dataset.unit || '');
+          if (el.type === 'color') el.closest('.color-row').querySelector('.hex').textContent = el.value;
+          activePreset = null; syncPresetButtons();
+          updateAll();
+        });
+      });
+    }
+
+    function slider(key, label, min, max, step, unit) {
+      return `<div class="control-row"><label>${label} <span class="value">${state[key]}${unit}</span></label><input type="range" data-key="${key}" data-unit="${unit}" min="${min}" max="${max}" step="${step}" value="${state[key]}"></div>`;
+    }
+    function dropdown(key, label, opts) {
+      const options = opts.map(o => `<option value="${o}" ${state[key]===o?'selected':''}>${o}</option>`).join('');
+      return `<div class="control-row"><label>${label}</label><select data-key="${key}">${options}</select></div>`;
+    }
+    function colorPick(key, label) {
+      return `<div class="color-row"><label>${label} <span class="hex">${state[key]}</span></label><input type="color" data-key="${key}" value="${state[key]}"></div>`;
+    }
+
+    function syncControlsToState() {
+      document.querySelectorAll('#panel-controls input, #panel-controls select').forEach(el => {
+        const k = el.dataset.key;
+        if (k && state[k] !== undefined) {
+          el.value = state[k];
+          if (el.type === 'range') el.closest('.control-row').querySelector('.value').textContent = state[k] + (el.dataset.unit || '');
+          if (el.type === 'color') el.closest('.color-row').querySelector('.hex').textContent = state[k];
+        }
+      });
+    }
+
+    function buildPresets() {
+      document.getElementById('presets').innerHTML = Object.keys(PRESETS).map(name =>
+        `<button data-preset="${name}" onclick="applyPreset('${name}')">${name}</button>`
+      ).join('');
+    }
+
+    function applyPreset(name) {
+      Object.assign(state, { ...DEFAULTS }, PRESETS[name]);
+      activePreset = name;
+      syncControlsToState();
+      syncPresetButtons();
+      updateAll();
+    }
+
+    function syncPresetButtons() {
+      document.querySelectorAll('.presets button').forEach(b => {
+        b.classList.toggle('active', b.dataset.preset === activePreset);
+      });
+    }
+
+    function getButtonStyle(hover, disabled) {
+      const bg = disabled ? state.bgColor : (hover ? state.hoverBgColor : state.bgColor);
+      return `
+        display: inline-block;
+        padding: ${state.paddingV}px ${state.paddingH}px;
+        border-radius: ${state.borderRadius}px;
+        border: ${state.borderWidth}px ${state.borderStyle} ${state.borderColor};
+        background: ${bg};
+        color: ${state.textColor};
+        font-family: ${state.fontFamily};
+        font-size: ${state.fontSize}px;
+        font-weight: ${state.fontWeight};
+        text-transform: ${state.textTransform};
+        letter-spacing: ${state.letterSpacing}px;
+        box-shadow: ${SHADOW_MAP[state.shadow]};
+        opacity: ${disabled ? 0.5 : state.opacity};
+        cursor: ${disabled ? 'not-allowed' : state.cursor};
+        transition: all ${state.transitionDuration}ms ease;
+        text-decoration: none;
+        line-height: 1.2;
+      `.replace(/\n\s+/g, ' ').trim();
+    }
+
+    function getCSSOutput() {
+      const lines = ['.button {'];
+      const add = (prop, val, def) => { if (val !== def) lines.push(`  ${prop}: ${val};`); };
+      add('border-radius', state.borderRadius + 'px', DEFAULTS.borderRadius + 'px');
+      add('padding', `${state.paddingV}px ${state.paddingH}px`, `${DEFAULTS.paddingV}px ${DEFAULTS.paddingH}px`);
+      add('border', `${state.borderWidth}px ${state.borderStyle} ${state.borderColor}`, `${DEFAULTS.borderWidth}px ${DEFAULTS.borderStyle} ${DEFAULTS.borderColor}`);
+      add('background', state.bgColor, DEFAULTS.bgColor);
+      add('color', state.textColor, DEFAULTS.textColor);
+      add('font-family', state.fontFamily, DEFAULTS.fontFamily);
+      add('font-size', state.fontSize + 'px', DEFAULTS.fontSize + 'px');
+      add('font-weight', state.fontWeight, DEFAULTS.fontWeight);
+      add('text-transform', state.textTransform, DEFAULTS.textTransform);
+      add('letter-spacing', state.letterSpacing + 'px', DEFAULTS.letterSpacing + 'px');
+      add('box-shadow', SHADOW_MAP[state.shadow], SHADOW_MAP[DEFAULTS.shadow]);
+      add('opacity', state.opacity, DEFAULTS.opacity);
+      add('cursor', state.cursor, DEFAULTS.cursor);
+      add('transition', `all ${state.transitionDuration}ms ease`, `all ${DEFAULTS.transitionDuration}ms ease`);
+      if (lines.length === 1) lines.push('  /* all defaults */');
+      lines.push('}');
+      return lines.join('\n');
+    }
+
+    let previewBuilt = false;
+    function renderPreview() {
+      const p = document.getElementById('panel-preview');
+      if (!previewBuilt) {
+        p.innerHTML = `
+          <div class="preview-canvas">
+            <div class="preview-states">
+              <div class="state-col"><span class="state-label">Default</span><span id="pv-btn-default">Click me</span></div>
+              <div class="state-col"><span class="state-label">Hover</span><span id="pv-btn-hover">Click me</span></div>
+              <div class="state-col"><span class="state-label">Disabled</span><span id="pv-btn-disabled">Click me</span></div>
+            </div>
+            <div class="css-output">
+              <div class="css-header"><span>CSS Output</span><button onclick="copyCss()">Copy</button></div>
+              <pre id="pv-css"></pre>
+            </div>
+          </div>`;
+        previewBuilt = true;
+      }
+      document.getElementById('pv-btn-default').setAttribute('style', getButtonStyle(false, false));
+      document.getElementById('pv-btn-hover').setAttribute('style', getButtonStyle(true, false));
+      document.getElementById('pv-btn-disabled').setAttribute('style', getButtonStyle(false, true));
+      document.getElementById('pv-css').textContent = getCSSOutput();
+    }
+
+    function copyCss() {
+      const text = getCSSOutput();
+      if (navigator.clipboard) navigator.clipboard.writeText(text);
+    }
+
+    function updatePrompt() {
+      const parts = [];
+      const s = state, d = DEFAULTS;
+      if (s.borderRadius !== d.borderRadius) parts.push(s.borderRadius >= 9999 ? 'fully rounded (pill shape)' : `rounded corners (${s.borderRadius}px radius)`);
+      if (s.paddingH !== d.paddingH || s.paddingV !== d.paddingV) {
+        const qual = (s.paddingH + s.paddingV) > 40 ? 'generous' : (s.paddingH + s.paddingV) < 20 ? 'compact' : 'moderate';
+        parts.push(`${qual} padding (${s.paddingV}px ${s.paddingH}px)`);
+      }
+      if (s.bgColor !== d.bgColor) parts.push(`a ${describeColor(s.bgColor)} background (${s.bgColor})`);
+      if (s.textColor !== d.textColor) parts.push(`${describeColor(s.textColor)} text (${s.textColor})`);
+      if (s.borderWidth !== d.borderWidth || s.borderStyle !== d.borderStyle || s.borderColor !== d.borderColor) {
+        if (s.borderWidth === 0 || s.borderStyle === 'none') parts.push('no border');
+        else parts.push(`a ${s.borderWidth}px ${s.borderStyle} border in ${describeColor(s.borderColor)}`);
+      }
+      if (s.fontFamily !== d.fontFamily) parts.push(`${s.fontFamily} font`);
+      if (s.fontSize !== d.fontSize) parts.push(`${s.fontSize}px font size`);
+      if (s.fontWeight !== d.fontWeight) {
+        const wn = { '300': 'light', '400': 'normal', '500': 'medium', '600': 'semibold', '700': 'bold' };
+        parts.push(`${wn[s.fontWeight] || s.fontWeight} weight`);
+      }
+      if (s.textTransform !== d.textTransform) parts.push(`${s.textTransform} text`);
+      if (s.letterSpacing !== d.letterSpacing) parts.push(s.letterSpacing > 1 ? 'wide letter spacing' : s.letterSpacing < 0 ? 'tight letter spacing' : 'slight letter spacing');
+      if (s.shadow !== d.shadow) parts.push(`a ${s.shadow} shadow`);
+      if (s.opacity !== d.opacity) parts.push(`${Math.round(s.opacity * 100)}% opacity`);
+      if (s.transitionDuration !== d.transitionDuration) parts.push(s.transitionDuration > 300 ? `a slow ${s.transitionDuration}ms transition` : `a smooth ${s.transitionDuration}ms transition`);
+      document.getElementById('prompt-text').textContent = parts.length > 0
+        ? `Design a button with ${parts.join(', ')}.`
+        : 'Default button styling — no changes specified.';
+    }
+
+    function describeColor(hex) {
+      if (!hex || hex === 'transparent') return 'transparent';
+      if (!hex.startsWith('#') || hex.length < 7) return 'colored';
+      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+      const max = Math.max(r,g,b), min = Math.min(r,g,b), l = (max+min)/2/255;
+      if (l > 0.9) return 'white'; if (l < 0.1) return 'black';
+      if (max - min < 30) return l > 0.5 ? 'light gray' : 'dark gray';
+      if (r > g && r > b) return g > 150 ? 'orange' : 'red';
+      if (g > r && g > b) return 'green';
+      if (b > r && b > g) return r > 150 ? 'purple' : 'blue';
+      return 'colored';
+    }
+
+    function updateAll() { renderPreview(); updatePrompt(); }
+
+    function showPanel(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+      const tp = document.getElementById('panel-' + name);
+      if (tp) tp.classList.add('active');
+      const tt = document.querySelector(`.panel-tab[data-panel="${name}"]`);
+      if (tt) tt.classList.add('active');
+      document.body.setAttribute('data-active-panel', name);
+    }
+
+    function copyPrompt() {
+      const text = document.getElementById('prompt-text').textContent;
+      const btn = document.getElementById('copy-btn');
+      const done = () => { btn.textContent = '✓ COPIED'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1500); };
+      const fallback = () => { const t = document.createElement('textarea'); t.value = text; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.focus(); t.select(); try { document.execCommand('copy'); done(); } catch(e){} document.body.removeChild(t); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(fallback);
+      else fallback();
+    }
+
+    buildPresets();
+    buildControls();
+    updateAll();
+  </script>
+</body>
+</html>

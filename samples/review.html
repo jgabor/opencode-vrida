@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Critique Rig — Vrida</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #0A0A0A; --ink: #141414; --charcoal: #1C1C1C; --graphite: #2A2A2A;
+      --steel: #444; --ash: #666; --silver: #999; --fog: #CCC;
+      --bone: #E8E8E8; --white: #F5F5F5; --pure: #FFFFFF;
+      --accent: #FF3D00; --accent-dim: rgba(255,61,0,0.12);
+      --cyan: #00E5CC; --cyan-dim: rgba(0,229,204,0.10);
+      --border: #2A2A2A;
+      --pending: #F59E0B; --approved: #10B981; --rejected: #EF4444;
+      --font-display: 'Space Grotesk','Helvetica Neue','Arial Black',sans-serif;
+      --font-body: 'IBM Plex Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+      --font-mono: 'IBM Plex Mono','JetBrains Mono','SF Mono',Consolas,monospace;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    body { font-family: var(--font-body); background: var(--black); color: var(--white); height: 100vh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
+
+    header { background: var(--ink); padding: 0 24px; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 10; height: 52px; }
+    header h1 { font-family: var(--font-display); font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; display: flex; align-items: center; gap: 10px; }
+    .title-mark { display: inline-block; width: 3px; height: 18px; background: var(--accent); }
+
+    .stats { display: flex; gap: 14px; font-size: 12px; margin-left: auto; font-weight: 500; font-family: var(--font-mono); color: var(--silver); }
+    .stats .stat { display: flex; align-items: center; gap: 5px; }
+    .stats .dot { width: 8px; height: 8px; flex-shrink: 0; }
+    .progress-bar { height: 3px; background: var(--graphite); flex: 1; min-width: 80px; max-width: 160px; overflow: hidden; margin: auto 0; }
+    .progress-fill { height: 100%; background: var(--approved); transition: width 0.3s ease; }
+
+    .presets { display: flex; gap: 2px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .presets::-webkit-scrollbar { display: none; }
+    .presets button { background: transparent; color: var(--silver); border: none; padding: 6px 14px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; cursor: pointer; transition: color 0.15s, background 0.15s; white-space: nowrap; letter-spacing: 0.02em; position: relative; }
+    .presets button:hover { color: var(--white); background: var(--graphite); }
+    .presets button.active { color: var(--accent); background: var(--accent-dim); }
+    .presets button.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent); }
+
+    .main { display: grid; grid-template-columns: 1fr 360px; flex: 1; overflow: hidden; position: relative; z-index: 1; }
+
+    .document-panel { overflow-y: auto; padding: 28px 40px; scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--graphite) transparent; }
+    .document-panel::-webkit-scrollbar { width: 4px; }
+    .document-panel::-webkit-scrollbar-thumb { background: var(--graphite); }
+
+    .sidebar { background: var(--ink); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; z-index: 5; }
+
+    .filter-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .filter-tabs button { flex: 1; padding: 10px 8px; background: none; border: none; color: var(--steel); font-family: var(--font-mono); font-size: 10px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.08em; }
+    .filter-tabs button:hover { color: var(--fog); }
+    .filter-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .filter-tabs .badge { background: var(--graphite); padding: 1px 6px; font-size: 10px; margin-left: 4px; font-weight: 600; }
+
+    .bulk-actions { display: flex; gap: 4px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .bulk-actions button { flex: 1; padding: 6px; font-family: var(--font-mono); font-size: 10px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--silver); transition: all 0.12s; text-transform: uppercase; letter-spacing: 0.04em; }
+    .bulk-actions button:hover { color: var(--white); border-color: var(--accent); }
+
+    .suggestions-list { flex: 1; overflow-y: auto; padding: 14px; scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--graphite) transparent; }
+
+    .suggestion-card { background: var(--charcoal); border: 1px solid var(--border); border-left: 3px solid var(--pending); padding: 14px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.12s; }
+    .suggestion-card:hover { border-color: var(--steel); }
+    .suggestion-card.approved { border-left-color: var(--approved); }
+    .suggestion-card.rejected { border-left-color: var(--rejected); opacity: 0.6; }
+
+    .suggestion-card .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .suggestion-card .category { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 6px; font-weight: 600; border: 1px solid; }
+    .cat-clarity { border-color: #60a5fa; color: #60a5fa; }
+    .cat-accuracy { border-color: #34d399; color: #34d399; }
+    .cat-structure { border-color: #fbbf24; color: #fbbf24; }
+    .cat-completeness { border-color: #f87171; color: #f87171; }
+    .cat-style { border-color: #a78bfa; color: #a78bfa; }
+    .cat-technical { border-color: #2dd4bf; color: #2dd4bf; }
+
+    .suggestion-card .title { font-size: 13px; font-weight: 600; flex: 1; line-height: 1.3; color: var(--white); }
+    .suggestion-card .line-ref { font-size: 11px; color: var(--steel); font-family: var(--font-mono); }
+    .suggestion-card .description { font-size: 12px; color: var(--silver); line-height: 1.5; margin-bottom: 10px; }
+
+    .card-actions { display: flex; gap: 4px; }
+    .card-actions button { padding: 5px 10px; font-family: var(--font-mono); font-size: 10px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--steel); transition: all 0.12s; flex: 1; text-transform: uppercase; letter-spacing: 0.04em; }
+    .card-actions button:hover { color: var(--white); }
+    .card-actions .approve-btn:hover { border-color: var(--approved); color: var(--approved); }
+    .card-actions .reject-btn:hover { border-color: var(--rejected); color: var(--rejected); }
+    .card-actions .comment-btn:hover { border-color: #60a5fa; color: #60a5fa; }
+    .card-actions .approve-btn.active { background: var(--approved); color: var(--black); border-color: var(--approved); }
+    .card-actions .reject-btn.active { background: var(--rejected); color: var(--pure); border-color: var(--rejected); }
+
+    .comment-area { margin-top: 8px; }
+    .comment-area textarea { width: 100%; background: var(--black); border: 1px solid var(--border); color: var(--pure); padding: 8px 10px; font-size: 12px; font-family: var(--font-body); resize: vertical; min-height: 48px; line-height: 1.5; transition: border-color 0.15s; outline: none; border-radius: 0; }
+    .comment-area textarea:focus { border-color: var(--accent); }
+    .comment-area .save-comment { margin-top: 4px; padding: 5px 12px; font-family: var(--font-mono); font-size: 10px; font-weight: 600; cursor: pointer; border: none; background: var(--pure); color: var(--black); transition: all 0.12s; text-transform: uppercase; letter-spacing: 0.04em; }
+    .comment-area .save-comment:hover { background: var(--accent); color: var(--pure); }
+
+    .doc-line { display: flex; padding: 3px 0; border-left: 3px solid transparent; padding-left: 12px; transition: all 0.15s ease; cursor: default; margin-bottom: 1px; }
+    .doc-line.has-pending { border-left-color: var(--pending); }
+    .doc-line.has-approved { border-left-color: var(--approved); }
+    .doc-line.has-rejected { border-left-color: var(--rejected); }
+    .doc-line.highlight { background: var(--accent-dim); }
+    .doc-line:hover { background: rgba(255,255,255,0.02); }
+    .doc-line .line-num { color: var(--steel); font-size: 12px; font-family: var(--font-mono); min-width: 36px; text-align: right; margin-right: 14px; user-select: none; }
+    .doc-line .line-content { font-size: 14px; line-height: 1.6; color: var(--fog); }
+    .doc-line .line-content strong { color: var(--pure); font-weight: 600; }
+    .doc-line .line-content code { background: rgba(255,255,255,0.08); padding: 1px 5px; font-family: var(--font-mono); font-size: 13px; }
+
+    .prompt-bar { background: var(--ink); border-top: 1px solid var(--border); padding: 12px 24px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; z-index: 10; max-height: 260px; }
+    .prompt-header { display: flex; justify-content: space-between; align-items: center; }
+    .prompt-title { font-family: var(--font-mono); font-size: 10px; color: var(--ash); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 500; }
+    .prompt-bar pre { flex: 1; width: 100%; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--fog); overflow-y: auto; max-height: 160px; font-family: var(--font-mono); background: var(--black); padding: 12px 14px; border: 1px solid var(--border); margin: 0; scrollbar-width: thin; scrollbar-color: var(--graphite) transparent; }
+    #copy-btn { background: var(--pure); color: var(--black); border: none; padding: 5px 16px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.12s; letter-spacing: 0.04em; text-transform: uppercase; }
+    #copy-btn:hover { background: var(--accent); color: var(--pure); }
+    #copy-btn.copied { background: var(--cyan); color: var(--black); }
+
+    .hidden { display: none; }
+
+    .panel-tabs { display: none; }
+
+    @media (max-width: 800px) {
+      .main { grid-template-columns: 1fr 280px; }
+    }
+
+    @media (max-width: 640px) {
+      .panel-tabs { display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 56px; background: var(--ink); border-top: 1px solid var(--border); z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+      .panel-tab { flex: 1; padding: 6px 4px 8px; background: none; border: none; color: var(--steel); font-family: var(--font-mono); font-size: 9px; font-weight: 600; cursor: pointer; border-top: 2px solid transparent; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; letter-spacing: 0.1em; text-transform: uppercase; }
+      .panel-tab .tab-icon { font-size: 16px; line-height: 1; }
+      .panel-tab.active { color: var(--accent); border-top-color: var(--accent); }
+      header { flex-wrap: wrap; padding: 0 16px; height: auto; min-height: 48px; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+      header h1 { font-size: 12px; }
+      .stats { width: 100%; margin-left: 0; justify-content: flex-start; }
+      .presets { width: 100%; }
+      .presets button { font-size: 10px; padding: 4px 10px; }
+      .main { display: flex; flex-direction: column; height: auto; flex: 1; }
+      .panel { display: none; }
+      .document-panel.panel.active { display: block; flex: 1; overflow-y: auto; padding: 16px 16px 76px 16px; min-height: 0; }
+      .sidebar.panel.active { display: flex; flex: 1; min-height: 0; border-left: none; padding-bottom: 76px; }
+      .prompt-bar { display: none; border-top: none; }
+      .prompt-bar.panel.active { display: flex; flex: 1; max-height: none; flex-direction: column; padding-bottom: 76px; }
+      .prompt-bar pre { max-height: none; }
+      body[data-active-panel="prompt"] .main { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span class="title-mark"></span>Document Critique</h1>
+    <div class="presets" id="presets"></div>
+    <div class="stats" id="stats"></div>
+  </header>
+  <div class="panel-tabs">
+    <button class="panel-tab active" data-panel="document" onclick="showPanel('document')"><span class="tab-icon">≡</span>Document</button>
+    <button class="panel-tab" data-panel="review" onclick="showPanel('review')"><span class="tab-icon">◻</span>Review</button>
+    <button class="panel-tab" data-panel="prompt" onclick="showPanel('prompt')"><span class="tab-icon">▤</span>Prompt</button>
+  </div>
+  <div class="main">
+    <div class="document-panel panel active" id="panel-document"></div>
+    <div class="sidebar panel" id="panel-review">
+      <div class="filter-tabs" id="filter-tabs"></div>
+      <div class="bulk-actions">
+        <button onclick="bulkAction('approved')">Approve All</button>
+        <button onclick="bulkAction('rejected')">Reject All</button>
+        <button onclick="bulkAction('pending')">Reset All</button>
+      </div>
+      <div class="suggestions-list" id="suggestions-list"></div>
+    </div>
+  </div>
+  <div class="prompt-bar panel" id="panel-prompt">
+    <div class="prompt-header">
+      <span class="prompt-title">Generated Prompt</span>
+      <button id="copy-btn" onclick="copyPrompt()">Copy</button>
+    </div>
+    <pre id="prompt-text"></pre>
+  </div>
+
+  <script>
+    const DOCUMENT = [
+      { text: '# User Authentication API' },
+      { text: '' },
+      { text: 'This API handles user authentication for the platform.' },
+      { text: '' },
+      { text: '## Endpoints' },
+      { text: '' },
+      { text: '### POST /auth/login' },
+      { text: '' },
+      { text: 'Authenticates a user and returns a token.' },
+      { text: '' },
+      { text: '**Request body:**' },
+      { text: '- `email` (string, required) — user email' },
+      { text: '- `password` (string, required) — user password' },
+      { text: '' },
+      { text: '**Response:**' },
+      { text: '- `200 OK` — returns JWT token' },
+      { text: '- `401 Unauthorized` — bad credentials' },
+      { text: '' },
+      { text: '### POST /auth/register' },
+      { text: '' },
+      { text: 'Creates a new user account.' },
+      { text: '' },
+      { text: '**Request body:**' },
+      { text: '- `email` (string) — user email' },
+      { text: '- `password` (string) — user password' },
+      { text: '- `name` (string) — display name' },
+      { text: '' },
+      { text: '### GET /auth/me' },
+      { text: '' },
+      { text: 'Returns the current user profile. Requires auth.' },
+      { text: '' },
+      { text: '## Error Handling' },
+      { text: '' },
+      { text: 'Errors are returned as JSON. The API uses standard HTTP codes.' },
+      { text: 'Some errors may be retried.' },
+      { text: '' },
+      { text: '## Rate Limiting' },
+      { text: '' },
+      { text: 'Rate limiting is applied to all endpoints.' },
+      { text: '' },
+      { text: '## Authentication' },
+      { text: '' },
+      { text: 'Pass the JWT token in the Authorization header:' },
+      { text: '`Authorization: Bearer <token>`' },
+      { text: '' },
+      { text: 'Tokens expire after some time.' },
+    ];
+
+    const CATEGORIES = {
+      clarity: { name: 'Clarity', class: 'cat-clarity' },
+      accuracy: { name: 'Accuracy', class: 'cat-accuracy' },
+      structure: { name: 'Structure', class: 'cat-structure' },
+      completeness: { name: 'Completeness', class: 'cat-completeness' },
+      style: { name: 'Style', class: 'cat-style' },
+      technical: { name: 'Technical', class: 'cat-technical' },
+    };
+
+    const suggestions = [
+      { id: 1, category: 'clarity', title: 'Clarify error retry behavior', desc: 'Line 35 says "some errors may be retried" but doesn\'t specify which errors are retryable vs. fatal, or what the retry strategy should be.', lines: [33, 35], status: 'pending', comment: '' },
+      { id: 2, category: 'completeness', title: 'Missing response schema for /auth/login', desc: 'The login endpoint documents status codes but not the response body shape. Include the JWT token field name and any metadata returned.', lines: [15, 16], status: 'pending', comment: '' },
+      { id: 3, category: 'completeness', title: 'Missing required markers on /auth/register', desc: 'The register endpoint fields don\'t specify which are required. Compare with /auth/login which marks fields as required.', lines: [24, 26], status: 'pending', comment: '' },
+      { id: 4, category: 'structure', title: 'Move Authentication before Endpoints', desc: 'The Authentication section (line 41) explains how to use tokens, but it appears after the Endpoints section. Readers need this context before seeing protected endpoints.', lines: [41, 44], status: 'pending', comment: '' },
+      { id: 5, category: 'clarity', title: 'Specify token expiration time', desc: 'Line 46 says "tokens expire after some time" — specify the actual TTL (e.g., 24 hours, 7 days) or document how to check expiration.', lines: [46, 46], status: 'pending', comment: '' },
+      { id: 6, category: 'completeness', title: 'Missing rate limit details', desc: 'Rate limiting section (line 37-39) doesn\'t specify the actual limits (requests per minute/hour), the response when rate limited (HTTP 429), or how to check remaining quota via headers.', lines: [37, 39], status: 'pending', comment: '' },
+      { id: 7, category: 'technical', title: 'No password requirements documented', desc: 'The register endpoint accepts a password but doesn\'t document minimum length, complexity requirements, or any validation rules.', lines: [25, 25], status: 'pending', comment: '' },
+      { id: 8, category: 'style', title: 'Inconsistent parameter documentation', desc: 'The login endpoint marks parameters as required but the register endpoint doesn\'t. Use a consistent format across all endpoints.', lines: [12, 25], status: 'pending', comment: '' },
+      { id: 9, category: 'completeness', title: 'Missing GET /auth/me response', desc: 'The /auth/me endpoint doesn\'t document what fields are returned in the user profile response.', lines: [30, 30], status: 'pending', comment: '' },
+      { id: 10, category: 'accuracy', title: 'API introduction is too vague', desc: 'Line 3 says "handles user authentication for the platform" — specify which platform, or rephrase to be self-contained.', lines: [3, 3], status: 'pending', comment: '' },
+    ];
+
+    const state = { filter: 'all', commentOpen: {} };
+    let activePreset = 'Fresh Review';
+
+    const PRESETS_MAP = {
+      'Fresh Review': () => { suggestions.forEach(s => { s.status = 'pending'; }); state.filter = 'all'; },
+      'Quick Scan': () => { state.filter = 'pending'; },
+      'Deep Review': () => { state.filter = 'all'; suggestions.forEach(s => { state.commentOpen[s.id] = true; }); },
+      'Approve All': () => { suggestions.forEach(s => { s.status = 'approved'; }); state.filter = 'approved'; },
+      'Focus: Structure': () => { state.filter = 'all'; },
+    };
+
+    function getFilteredSuggestions() {
+      let list = suggestions;
+      if (state.filter === 'pending') list = list.filter(s => s.status === 'pending');
+      else if (state.filter === 'approved') list = list.filter(s => s.status === 'approved');
+      else if (state.filter === 'rejected') list = list.filter(s => s.status === 'rejected');
+      if (activePreset === 'Quick Scan') list = list.filter(s => s.category === 'clarity' || s.category === 'accuracy');
+      if (activePreset === 'Focus: Structure') list = list.filter(s => s.category === 'structure' || s.category === 'completeness');
+      return list;
+    }
+
+    function counts() {
+      const total = suggestions.length;
+      const pending = suggestions.filter(s => s.status === 'pending').length;
+      const approved = suggestions.filter(s => s.status === 'approved').length;
+      const rejected = suggestions.filter(s => s.status === 'rejected').length;
+      return { total, pending, approved, rejected, done: approved + rejected };
+    }
+
+    function renderStats() {
+      const c = counts();
+      document.getElementById('stats').innerHTML = `
+        <div class="stat"><span class="dot" style="background:var(--fog)"></span>${c.total}</div>
+        <div class="stat"><span class="dot" style="background:var(--pending)"></span>${c.pending}</div>
+        <div class="stat"><span class="dot" style="background:var(--approved)"></span>${c.approved}</div>
+        <div class="stat"><span class="dot" style="background:var(--rejected)"></span>${c.rejected}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${c.total ? (c.done / c.total * 100) : 0}%"></div></div>
+      `;
+    }
+
+    function renderFilterTabs() {
+      const c = counts();
+      const tabs = [
+        { key: 'all', label: 'All', count: c.total },
+        { key: 'pending', label: 'Pending', count: c.pending },
+        { key: 'approved', label: 'Approved', count: c.approved },
+        { key: 'rejected', label: 'Rejected', count: c.rejected },
+      ];
+      document.getElementById('filter-tabs').innerHTML = tabs.map(t =>
+        `<button class="${state.filter === t.key ? 'active' : ''}" onclick="setFilter('${t.key}')">${t.label}<span class="badge">${t.count}</span></button>`
+      ).join('');
+    }
+
+    window.setFilter = function(f) {
+      state.filter = f;
+      activePreset = null;
+      syncPresetButtons();
+      renderAll();
+    };
+
+    function renderDocument() {
+      const panel = document.getElementById('panel-document');
+      const lineStatus = {};
+      for (const s of suggestions) {
+        for (let i = s.lines[0]; i <= s.lines[1]; i++) {
+          if (!lineStatus[i] || statusPriority(s.status) > statusPriority(lineStatus[i])) {
+            lineStatus[i] = s.status;
+          }
+        }
+      }
+      panel.innerHTML = DOCUMENT.map((line, idx) => {
+        const num = idx + 1;
+        const st = lineStatus[num];
+        const cls = st ? `has-${st}` : '';
+        let content = escapeHtml(line.text);
+        const codeSpans = [];
+        content = content.replace(/`([^`]+)`/g, (_, code) => {
+          codeSpans.push('<code>' + code + '</code>');
+          return '\u2060CS' + (codeSpans.length - 1) + '\u2060';
+        });
+        content = content.replace(/^# (.+)$/, '<strong style="font-size:18px;color:var(--pure)">$1</strong>');
+        content = content.replace(/^## (.+)$/, '<strong style="font-size:15px;color:var(--silver)">$1</strong>');
+        content = content.replace(/^### (.+)$/, '<strong style="font-size:13px;color:var(--silver)">$1</strong>');
+        content = content.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        content = content.replace(/^- (.+)$/, '&nbsp;&nbsp;- $1');
+        content = content.replace(/\u2060CS(\d+)\u2060/g, (_, i) => codeSpans[i]);
+        return `<div class="doc-line ${cls}" id="doc-line-${num}" onclick="scrollToSuggestionForLine(${num})" title="${st ? 'Click to see suggestion' : ''}"><span class="line-num">${num}</span><span class="line-content">${content || '&nbsp;'}</span></div>`;
+      }).join('');
+    }
+
+    function statusPriority(s) { return s === 'pending' ? 3 : s === 'approved' ? 2 : s === 'rejected' ? 1 : 0; }
+
+    function renderSuggestions() {
+      const list = getFilteredSuggestions();
+      if (list.length === 0) {
+        document.getElementById('suggestions-list').innerHTML = '<p style="font-size:11px;color:var(--steel);padding:16px;text-align:center;font-family:var(--font-mono)">No suggestions match the current filter.</p>';
+        return;
+      }
+      document.getElementById('suggestions-list').innerHTML = list.map(s => {
+        const cat = CATEGORIES[s.category];
+        const statusCls = s.status !== 'pending' ? s.status : '';
+        const commentOpen = state.commentOpen[s.id];
+        return `<div class="suggestion-card ${statusCls}" id="suggestion-${s.id}" onclick="scrollToDocLine(${s.lines[0]})">
+          <div class="card-header">
+            <span class="category ${cat.class}">${cat.name}</span>
+            <span class="title">${s.title}</span>
+            <span class="line-ref">L${s.lines[0]}${s.lines[1] !== s.lines[0] ? '-' + s.lines[1] : ''}</span>
+          </div>
+          <div class="description">${s.desc}</div>
+          <div class="card-actions">
+            <button class="approve-btn ${s.status === 'approved' ? 'active' : ''}" onclick="event.stopPropagation(); setStatus(${s.id}, 'approved')">Approve</button>
+            <button class="reject-btn ${s.status === 'rejected' ? 'active' : ''}" onclick="event.stopPropagation(); setStatus(${s.id}, 'rejected')">Reject</button>
+            <button class="comment-btn" onclick="event.stopPropagation(); toggleComment(${s.id})">Comment</button>
+          </div>
+          ${commentOpen ? `<div class="comment-area">
+            <textarea id="comment-text-${s.id}" placeholder="Add a comment...">${s.comment}</textarea>
+            <button class="save-comment" onclick="event.stopPropagation(); saveComment(${s.id})">Save</button>
+          </div>` : (s.comment ? `<div style="margin-top:6px;font-size:11px;color:var(--steel);font-family:var(--font-mono)">"${escapeHtml(s.comment)}"</div>` : '')}
+        </div>`;
+      }).join('');
+    }
+
+    window.setStatus = function(id, status) {
+      const s = suggestions.find(x => x.id === id);
+      s.status = s.status === status ? 'pending' : status;
+      activePreset = null;
+      syncPresetButtons();
+      renderAll();
+    };
+
+    window.toggleComment = function(id) {
+      state.commentOpen[id] = !state.commentOpen[id];
+      renderSuggestions();
+    };
+
+    window.saveComment = function(id) {
+      const s = suggestions.find(x => x.id === id);
+      s.comment = document.getElementById(`comment-text-${id}`).value.trim();
+      state.commentOpen[id] = false;
+      renderAll();
+    };
+
+    window.bulkAction = function(status) {
+      suggestions.forEach(s => { s.status = status; });
+      activePreset = null;
+      syncPresetButtons();
+      renderAll();
+    };
+
+    window.scrollToDocLine = function(lineNum) {
+      if (window.innerWidth <= 640) showPanel('document');
+      const el = document.getElementById(`doc-line-${lineNum}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('highlight');
+        setTimeout(() => { el.classList.remove('highlight'); }, 1500);
+      }
+    };
+
+    const lastScrolledMatch = {};
+    window.scrollToSuggestionForLine = function(lineNum) {
+      if (window.innerWidth <= 640) showPanel('review');
+      const matches = suggestions.filter(s => lineNum >= s.lines[0] && lineNum <= s.lines[1]);
+      if (matches.length === 0) return;
+      const key = lineNum;
+      const lastIdx = lastScrolledMatch[key] || 0;
+      const idx = lastIdx < matches.length ? lastIdx : 0;
+      const s = matches[idx];
+      lastScrolledMatch[key] = (idx + 1) % matches.length;
+      const el = document.getElementById(`suggestion-${s.id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.borderColor = 'var(--accent)';
+        setTimeout(() => { el.style.borderColor = ''; }, 1500);
+      }
+    };
+
+    function buildPresets() {
+      document.getElementById('presets').innerHTML = Object.keys(PRESETS_MAP).map(name =>
+        `<button data-preset="${name}" class="${name === activePreset ? 'active' : ''}" onclick="applyPreset('${name}')">${name}</button>`
+      ).join('');
+    }
+
+    window.applyPreset = function(name) {
+      PRESETS_MAP[name]();
+      activePreset = name;
+      syncPresetButtons();
+      renderAll();
+    };
+
+    function syncPresetButtons() {
+      document.querySelectorAll('.presets button').forEach(b => {
+        b.classList.toggle('active', b.dataset.preset === activePreset);
+      });
+    }
+
+    function updatePrompt() {
+      const approved = suggestions.filter(s => s.status === 'approved');
+      if (approved.length === 0) {
+        document.getElementById('prompt-text').textContent = 'No changes approved — document looks good as-is.';
+        return;
+      }
+      const byCategory = {};
+      for (const s of approved) {
+        const catName = CATEGORIES[s.category].name;
+        if (!byCategory[catName]) byCategory[catName] = [];
+        byCategory[catName].push(s);
+      }
+      let text = 'Apply the following review feedback:\n';
+      for (const [cat, items] of Object.entries(byCategory)) {
+        text += `\n${cat}:\n`;
+        for (const s of items) {
+          const lineRef = s.lines[0] === s.lines[1] ? `line ${s.lines[0]}` : `lines ${s.lines[0]}-${s.lines[1]}`;
+          text += `- ${s.title} (${lineRef})`;
+          if (s.comment) text += ` (Reviewer note: ${s.comment})`;
+          text += '\n';
+        }
+      }
+      document.getElementById('prompt-text').textContent = text.trim();
+    }
+
+    function renderAll() {
+      renderStats();
+      renderFilterTabs();
+      renderDocument();
+      renderSuggestions();
+      updatePrompt();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function copyPrompt() {
+      const text = document.getElementById('prompt-text').textContent;
+      const btn = document.getElementById('copy-btn');
+      const done = () => { btn.textContent = '✓ COPIED'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1500); };
+      const fallback = () => { const t = document.createElement('textarea'); t.value = text; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.focus(); t.select(); try { document.execCommand('copy'); done(); } catch(e){} document.body.removeChild(t); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(fallback);
+      else fallback();
+    }
+
+    function showPanel(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('panel-' + name).classList.add('active');
+      document.querySelector(`.panel-tab[data-panel="${name}"]`).classList.add('active');
+      document.body.dataset.activePanel = name;
+    }
+
+    buildPresets();
+    renderAll();
+  </script>
+</body>
+</html>

@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Brainstorm — Vrida</title>
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:        #0A0A0A;
+      --ink:          #141414;
+      --charcoal:     #1C1C1C;
+      --graphite:     #2A2A2A;
+      --steel:        #444;
+      --ash:          #666;
+      --silver:       #999;
+      --fog:          #CCC;
+      --bone:         #E8E8E8;
+      --white:        #F5F5F5;
+      --pure:         #FFFFFF;
+      --accent:       #FF3D00;
+      --accent-dim:   rgba(255, 61, 0, 0.12);
+      --accent-mid:   rgba(255, 61, 0, 0.25);
+      --cyan:         #00E5CC;
+      --cyan-dim:     rgba(0, 229, 204, 0.10);
+      --cyan-mid:     rgba(0, 229, 204, 0.25);
+      --border:       #2A2A2A;
+      --font-display: 'Space Grotesk', 'Helvetica Neue', 'Arial Black', sans-serif;
+      --font-body:    'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      --font-mono:    'IBM Plex Mono', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    }
+
+    /* ── Animations ───────────────────────────────────────────────── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes lineReveal {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0; }
+    }
+
+    /* ── Body ──────────────────────────────────────────────────────── */
+    body {
+      font-family: var(--font-body);
+      background: var(--black);
+      color: var(--white);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────── */
+    header {
+      background: var(--ink);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 10;
+      height: 52px;
+      animation: fadeIn 0.4s ease-out both;
+    }
+    header h1 {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-mark {
+      display: inline-block;
+      width: 3px;
+      height: 18px;
+      background: var(--accent);
+    }
+
+    /* ── Presets ───────────────────────────────────────────────────── */
+    .presets {
+      display: flex;
+      gap: 2px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      margin-left: auto;
+    }
+    .presets::-webkit-scrollbar { display: none; }
+    .presets button {
+      background: transparent;
+      color: var(--silver);
+      border: none;
+      padding: 6px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+      position: relative;
+    }
+    .presets button:hover {
+      color: var(--white);
+      background: var(--graphite);
+    }
+    .presets button.active {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .presets button.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    /* ── Main grid ────────────────────────────────────────────────── */
+    .main {
+      display: grid;
+      grid-template-columns: clamp(260px, 32%, 360px) 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Controls ─────────────────────────────────────────────────── */
+    .controls {
+      background: var(--ink);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--graphite) transparent;
+    }
+    .controls::-webkit-scrollbar { width: 4px; }
+    .controls::-webkit-scrollbar-track { background: transparent; }
+    .controls::-webkit-scrollbar-thumb { background: var(--graphite); }
+
+    .control-group {
+      margin-bottom: 28px;
+      animation: fadeIn 0.4s ease-out both;
+    }
+    .control-group:nth-child(1) { animation-delay: 0.05s; }
+    .control-group:nth-child(2) { animation-delay: 0.10s; }
+    .control-group:nth-child(3) { animation-delay: 0.15s; }
+    .control-group:nth-child(4) { animation-delay: 0.20s; }
+    .control-group:nth-child(5) { animation-delay: 0.25s; }
+
+    .control-group h3 {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ash);
+      margin-bottom: 14px;
+      font-weight: 500;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .control-row { margin-bottom: 12px; }
+    .control-row label {
+      display: block;
+      font-size: 12px;
+      color: var(--fog);
+      margin-bottom: 5px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    /* Inputs */
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: var(--black);
+      border: 1px solid var(--border);
+      color: var(--pure);
+      padding: 8px 10px;
+      border-radius: 0;
+      font-size: 13px;
+      font-family: var(--font-body);
+      transition: border-color 0.15s;
+      outline: none;
+      resize: vertical;
+    }
+    input[type="text"]::placeholder, textarea::placeholder {
+      color: var(--steel);
+    }
+    input[type="text"]:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+    }
+    textarea { line-height: 1.5; min-height: 56px; }
+    select {
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23999'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+
+    /* Range */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 2px;
+      background: var(--graphite);
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      background: var(--pure);
+      cursor: pointer;
+      border: 2px solid var(--accent);
+      transition: background 0.12s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      background: var(--accent);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 14px; height: 14px;
+      background: var(--pure);
+      cursor: pointer;
+      border: 2px solid var(--accent);
+      border-radius: 0;
+    }
+
+    .scope-row { display: flex; align-items: center; gap: 12px; }
+    .scope-row input[type="range"] { flex: 1; }
+    .scope-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      min-width: 72px;
+      text-align: right;
+      color: var(--fog);
+      letter-spacing: 0.02em;
+    }
+
+    /* Radio group */
+    .radio-group {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+    }
+    .radio-group label {
+      flex: 1;
+      text-align: center;
+      padding: 7px 0;
+      margin: 0;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.12s;
+      font-weight: 500;
+      color: var(--silver);
+      letter-spacing: 0.03em;
+      border-right: 1px solid var(--border);
+    }
+    .radio-group label:last-of-type { border-right: none; }
+    .radio-group input { display: none; }
+    .radio-group input:checked + label {
+      background: var(--pure);
+      color: var(--black);
+    }
+
+    /* Chips */
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--silver);
+      transition: all 0.12s;
+      user-select: none;
+      -webkit-user-select: none;
+      letter-spacing: 0.01em;
+    }
+    .chip:hover {
+      border-color: var(--steel);
+      color: var(--white);
+    }
+    .chip.active.constraint {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .chip.active.metric {
+      background: var(--cyan-dim);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    /* ── Preview ──────────────────────────────────────────────────── */
+    .preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px;
+      background: var(--black);
+    }
+
+    .brainstorm-card {
+      background: var(--pure);
+      color: var(--black);
+      padding: 36px 32px 30px;
+      max-width: 540px;
+      width: 100%;
+      position: relative;
+      border: 1px solid var(--fog);
+      animation: fadeIn 0.5s ease-out both;
+    }
+    .brainstorm-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--accent);
+      transform-origin: left;
+      animation: lineReveal 0.6s ease-out 0.3s both;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: var(--black);
+    }
+    .card-title.empty {
+      color: var(--silver);
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .meta-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: 1px solid;
+    }
+    .meta-badge.priority-low      { border-color: var(--silver); color: var(--ash); }
+    .meta-badge.priority-medium   { border-color: var(--steel);  color: var(--steel); background: #f8f8f8; }
+    .meta-badge.priority-high     { border-color: var(--accent); color: var(--accent); }
+    .meta-badge.priority-critical { border-color: var(--accent); color: var(--pure); background: var(--accent); }
+    .meta-badge.target { border-color: var(--ash); color: var(--ash); }
+    .meta-badge.scope  { border-color: var(--bone); color: var(--steel); }
+
+    .card-divider {
+      height: 1px;
+      background: var(--bone);
+      margin: 20px 0;
+    }
+
+    .card-section { margin-bottom: 18px; }
+    .card-section:last-child { margin-bottom: 0; }
+    .section-heading {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--ash);
+      margin-bottom: 6px;
+    }
+    .section-text {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #1a1a1a;
+    }
+    .section-text.empty {
+      color: var(--silver);
+    }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .card-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      border: 1px solid;
+    }
+    .card-tag.constraint { border-color: var(--accent); color: var(--accent); }
+    .card-tag.metric     { border-color: var(--cyan);   color: #009988; }
+
+    .card-notes {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--ash);
+      padding: 10px 12px;
+      border-left: 3px solid var(--bone);
+      background: #fafafa;
+    }
+
+    /* ── Prompt bar ───────────────────────────────────────────────── */
+    .prompt-bar {
+      background: var(--ink);
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      z-index: 10;
+      max-height: 260px;
+      animation: fadeIn 0.4s ease-out 0.2s both;
+    }
+    .prompt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .prompt-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--ash);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 500;
+    }
+    .prompt-bar pre {
+      flex: 1;
+      width: 100%;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--fog);
+      overflow-y: auto;
+      max-height: 160px;
+      font-family: var(--font-mono);
+      background: var(--black);
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      margin: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--graphite) transparent;
+    }
+
+    /* Copy button */
+    #copy-btn {
+      background: var(--pure);
+      color: var(--black);
+      border: none;
+      padding: 5px 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    #copy-btn:hover {
+      background: var(--accent);
+      color: var(--pure);
+    }
+    #copy-btn.copied {
+      background: var(--cyan);
+      color: var(--black);
+    }
+
+    /* ── Mobile ───────────────────────────────────────────────────── */
+    .panel-tabs { display: none; }
+
+    @media (max-width: 640px) {
+      .panel-tabs {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: 56px;
+        background: var(--ink);
+        border-top: 1px solid var(--border);
+        z-index: 100;
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .panel-tab {
+        flex: 1;
+        padding: 6px 4px 8px;
+        background: none;
+        border: none;
+        color: var(--steel);
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        cursor: pointer;
+        border-top: 2px solid transparent;
+        transition: all 0.15s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .panel-tab .tab-icon {
+        font-size: 16px;
+        line-height: 1;
+      }
+      .panel-tab.active {
+        color: var(--accent);
+        border-top-color: var(--accent);
+      }
+
+      header { flex-wrap: wrap; padding: 0 16px; height: auto; min-height: 48px; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+      header h1 { font-size: 12px; }
+      .presets { width: 100%; margin-left: 0; gap: 0; }
+      .presets button { font-size: 10px; padding: 4px 10px; }
+
+      .main { display: flex; flex-direction: column; flex: 1; height: auto; }
+      .controls { width: 100% !important; border-right: none; }
+      .panel { display: none !important; }
+      .controls.panel.active { display: block !important; flex: 1; overflow-y: auto; padding-bottom: 76px; }
+      .preview.panel.active  { display: flex !important; flex: 1; padding-bottom: 76px; align-items: flex-start; padding: 20px 16px 76px; }
+      .prompt-bar { display: none !important; border-top: none; }
+      .prompt-bar.panel.active { display: flex !important; flex: 1; max-height: none; padding-bottom: 76px; }
+      .prompt-bar.panel.active pre { max-height: none; }
+      body[data-active-panel="prompt"] .main { display: none; }
+
+      .brainstorm-card { padding: 24px 20px 22px; }
+      .card-title { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span class="title-mark"></span>Feature Brainstorm</h1>
+    <div class="presets" id="presets"></div>
+  </header>
+
+  <div class="panel-tabs">
+    <button class="panel-tab active" data-panel="controls" onclick="showPanel('controls')">
+      <span class="tab-icon">—</span>Define
+    </button>
+    <button class="panel-tab" data-panel="preview" onclick="showPanel('preview')">
+      <span class="tab-icon">◻</span>Preview
+    </button>
+    <button class="panel-tab" data-panel="prompt" onclick="showPanel('prompt')">
+      <span class="tab-icon">▤</span>Prompt
+    </button>
+  </div>
+
+  <div class="main">
+    <div class="controls panel active" id="panel-controls"></div>
+    <div class="preview panel" id="panel-preview"></div>
+  </div>
+
+  <div class="prompt-bar panel" id="panel-prompt">
+    <div class="prompt-header">
+      <span class="prompt-title">Generated Prompt</span>
+      <button id="copy-btn" onclick="copyPrompt()">Copy</button>
+    </div>
+    <pre id="prompt-text"></pre>
+  </div>
+
+  <script>
+    /* ── Constants ─────────────────────────────────────────────────── */
+    const SCOPE_LABELS = ['Quick Fix', 'Small Task', 'Feature', 'Project', 'Epic'];
+
+    const CONSTRAINTS = [
+      'Performance sensitive', 'Breaking change', 'Requires migration',
+      'Needs design review', 'Third-party dependency', 'Security implications',
+      'Accessibility required', 'Backwards compatible'
+    ];
+
+    const METRICS = [
+      'Reduced load time', 'Increased engagement', 'Fewer support tickets',
+      'Higher conversion', 'Improved DX', 'Better test coverage',
+      'Reduced error rate', 'User satisfaction'
+    ];
+
+    const DEFAULTS = Object.freeze({
+      featureName: '', problem: '', proposal: '',
+      targetUser: 'End User', priority: 'Medium', scope: 3,
+      constraints: [], metrics: [], notes: ''
+    });
+
+    const PRESETS = {
+      'Blank Slate': {
+        featureName: '', problem: '', proposal: '',
+        targetUser: 'End User', priority: 'Medium', scope: 3,
+        constraints: [], metrics: [], notes: ''
+      },
+      'Quick Fix': {
+        priority: 'Medium', scope: 1,
+        constraints: ['Backwards compatible'],
+        metrics: ['Reduced error rate']
+      },
+      'User Pain Point': {
+        priority: 'High', scope: 3, targetUser: 'End User',
+        constraints: ['Needs design review', 'Accessibility required'],
+        metrics: ['User satisfaction', 'Fewer support tickets']
+      },
+      'Tech Debt': {
+        priority: 'Medium', scope: 3, targetUser: 'Developer',
+        constraints: ['Performance sensitive', 'Backwards compatible'],
+        metrics: ['Improved DX', 'Better test coverage']
+      },
+      'Big Bet': {
+        priority: 'Critical', scope: 5, targetUser: 'All Users',
+        constraints: ['Needs design review', 'Security implications', 'Accessibility required'],
+        metrics: ['Increased engagement', 'Higher conversion', 'User satisfaction']
+      }
+    };
+
+    const state = { ...DEFAULTS, constraints: [], metrics: [] };
+    let activePreset = null;
+
+    /* ── Build ─────────────────────────────────────────────────────── */
+    function buildControls() {
+      const c = document.getElementById('panel-controls');
+      c.innerHTML = `
+        <div class="control-group">
+          <h3>Identity</h3>
+          <div class="control-row">
+            <label>Feature name</label>
+            <input type="text" id="ctrl-name" placeholder="e.g. Dark mode support" value="${esc(state.featureName)}" oninput="onText('featureName', this.value)">
+          </div>
+          <div class="control-row">
+            <label>Problem</label>
+            <textarea id="ctrl-problem" rows="3" placeholder="What problem does this solve?" oninput="onText('problem', this.value)">${esc(state.problem)}</textarea>
+          </div>
+          <div class="control-row">
+            <label>Proposal</label>
+            <textarea id="ctrl-proposal" rows="3" placeholder="How would this work?" oninput="onText('proposal', this.value)">${esc(state.proposal)}</textarea>
+          </div>
+        </div>
+        <div class="control-group">
+          <h3>Context</h3>
+          <div class="control-row">
+            <label>Target user</label>
+            <select id="ctrl-target" onchange="onSelect('targetUser', this.value)">
+              ${['End User','Developer','Admin','Internal Team','All Users'].map(o =>
+                `<option value="${o}" ${state.targetUser===o?'selected':''}>${o}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div class="control-row">
+            <label>Priority</label>
+            <div class="radio-group">
+              ${['Low','Medium','High','Critical'].map(p => `
+                <input type="radio" name="priority" id="pri-${p}" value="${p}" ${state.priority===p?'checked':''}
+                  onchange="onRadio('priority','${p}')">
+                <label for="pri-${p}">${p}</label>
+              `).join('')}
+            </div>
+          </div>
+          <div class="control-row">
+            <label>Scope</label>
+            <div class="scope-row">
+              <input type="range" id="ctrl-scope" min="1" max="5" step="1" value="${state.scope}" oninput="onScope(this.value)">
+              <span class="scope-label" id="scope-label">${SCOPE_LABELS[state.scope - 1]}</span>
+            </div>
+          </div>
+        </div>
+        <div class="control-group">
+          <h3>Constraints</h3>
+          <div class="chip-grid" id="constraint-chips">
+            ${CONSTRAINTS.map(c => `
+              <button class="chip constraint ${state.constraints.includes(c)?'active':''}"
+                onclick="toggleChip('constraints','${esc(c)}',this)">${c}</button>
+            `).join('')}
+          </div>
+        </div>
+        <div class="control-group">
+          <h3>Success Metrics</h3>
+          <div class="chip-grid" id="metric-chips">
+            ${METRICS.map(m => `
+              <button class="chip metric ${state.metrics.includes(m)?'active':''}"
+                onclick="toggleChip('metrics','${esc(m)}',this)">${m}</button>
+            `).join('')}
+          </div>
+        </div>
+        <div class="control-group">
+          <h3>Notes</h3>
+          <div class="control-row">
+            <textarea id="ctrl-notes" rows="4" placeholder="Edge cases, open questions…" oninput="onText('notes', this.value)">${esc(state.notes)}</textarea>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ── Handlers ──────────────────────────────────────────────────── */
+    function onText(k, v) { state[k] = v; activePreset = null; syncPresetButtons(); updateAll(); }
+    function onSelect(k, v) { state[k] = v; activePreset = null; syncPresetButtons(); updateAll(); }
+    function onRadio(k, v) { state[k] = v; activePreset = null; syncPresetButtons(); updateAll(); }
+    function onScope(v) {
+      state.scope = parseInt(v);
+      document.getElementById('scope-label').textContent = SCOPE_LABELS[state.scope - 1];
+      activePreset = null; syncPresetButtons(); updateAll();
+    }
+    function toggleChip(arr, val, el) {
+      const i = state[arr].indexOf(val);
+      if (i >= 0) { state[arr].splice(i, 1); el.classList.remove('active'); }
+      else { state[arr].push(val); el.classList.add('active'); }
+      activePreset = null; syncPresetButtons(); updateAll();
+    }
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* ── Sync ──────────────────────────────────────────────────────── */
+    function syncControlsToState() {
+      const el = id => document.getElementById(id);
+      if (el('ctrl-name'))     el('ctrl-name').value = state.featureName;
+      if (el('ctrl-problem'))  el('ctrl-problem').value = state.problem;
+      if (el('ctrl-proposal')) el('ctrl-proposal').value = state.proposal;
+      if (el('ctrl-target'))   el('ctrl-target').value = state.targetUser;
+      if (el('ctrl-scope'))    { el('ctrl-scope').value = state.scope; el('scope-label').textContent = SCOPE_LABELS[state.scope - 1]; }
+      if (el('ctrl-notes'))    el('ctrl-notes').value = state.notes;
+      document.querySelectorAll('input[name="priority"]').forEach(r => r.checked = r.value === state.priority);
+      document.querySelectorAll('#constraint-chips .chip').forEach(c => c.classList.toggle('active', state.constraints.includes(c.textContent.trim())));
+      document.querySelectorAll('#metric-chips .chip').forEach(c => c.classList.toggle('active', state.metrics.includes(c.textContent.trim())));
+    }
+
+    function buildPresets() {
+      document.getElementById('presets').innerHTML = Object.keys(PRESETS).map(n =>
+        `<button data-preset="${n}" onclick="applyPreset('${n}')">${n}</button>`
+      ).join('');
+    }
+
+    function applyPreset(name) {
+      const p = PRESETS[name];
+      if (name === 'Blank Slate') {
+        Object.assign(state, { ...DEFAULTS, constraints: [], metrics: [] });
+      } else {
+        state.targetUser = p.targetUser || DEFAULTS.targetUser;
+        state.priority = p.priority || DEFAULTS.priority;
+        state.scope = p.scope || DEFAULTS.scope;
+        state.constraints = p.constraints ? [...p.constraints] : [];
+        state.metrics = p.metrics ? [...p.metrics] : [];
+        if ('featureName' in p) state.featureName = p.featureName;
+        if ('problem' in p) state.problem = p.problem;
+        if ('proposal' in p) state.proposal = p.proposal;
+        if ('notes' in p) state.notes = p.notes;
+      }
+      activePreset = name;
+      syncControlsToState();
+      syncPresetButtons();
+      updateAll();
+    }
+
+    function syncPresetButtons() {
+      document.querySelectorAll('.presets button').forEach(b =>
+        b.classList.toggle('active', b.dataset.preset === activePreset)
+      );
+    }
+
+    /* ── Preview ───────────────────────────────────────────────────── */
+    let cardBuilt = false;
+
+    function buildPreviewCard() {
+      document.getElementById('panel-preview').innerHTML = `
+        <div class="brainstorm-card">
+          <div class="card-header">
+            <div class="card-title" id="pv-title"></div>
+            <div class="card-meta" id="pv-meta"></div>
+          </div>
+          <div class="card-divider"></div>
+          <div class="card-section">
+            <div class="section-heading">Problem</div>
+            <div class="section-text" id="pv-problem"></div>
+          </div>
+          <div class="card-section">
+            <div class="section-heading">Proposal</div>
+            <div class="section-text" id="pv-proposal"></div>
+          </div>
+          <div class="card-section" id="pv-constraints-section" style="display:none">
+            <div class="section-heading">Constraints</div>
+            <div class="card-tags" id="pv-constraints"></div>
+          </div>
+          <div class="card-section" id="pv-metrics-section" style="display:none">
+            <div class="section-heading">Success Metrics</div>
+            <div class="card-tags" id="pv-metrics"></div>
+          </div>
+          <div class="card-section" id="pv-notes-section" style="display:none">
+            <div class="section-heading">Notes</div>
+            <div class="card-notes" id="pv-notes"></div>
+          </div>
+        </div>`;
+      cardBuilt = true;
+    }
+
+    function renderPreview() {
+      if (!cardBuilt) buildPreviewCard();
+      const s = state;
+
+      // Title
+      const titleEl = document.getElementById('pv-title');
+      titleEl.textContent = s.featureName || 'Untitled Feature';
+      titleEl.classList.toggle('empty', !s.featureName);
+
+      // Meta badges
+      const metaEl = document.getElementById('pv-meta');
+      const pri = `<span class="meta-badge priority-${s.priority.toLowerCase()}">${s.priority}</span>`;
+      const tgt = s.targetUser !== DEFAULTS.targetUser ? `<span class="meta-badge target">${esc(s.targetUser)}</span>` : '';
+      const scp = `<span class="meta-badge scope">${SCOPE_LABELS[s.scope - 1]}</span>`;
+      metaEl.innerHTML = pri + tgt + scp;
+
+      // Problem
+      const probEl = document.getElementById('pv-problem');
+      probEl.textContent = s.problem || 'What problem does this solve?';
+      probEl.classList.toggle('empty', !s.problem);
+
+      // Proposal
+      const propEl = document.getElementById('pv-proposal');
+      propEl.textContent = s.proposal || 'How would this work?';
+      propEl.classList.toggle('empty', !s.proposal);
+
+      // Constraints
+      const conSec = document.getElementById('pv-constraints-section');
+      const conEl = document.getElementById('pv-constraints');
+      if (s.constraints.length) {
+        conSec.style.display = '';
+        conEl.innerHTML = s.constraints.map(c => `<span class="card-tag constraint">${esc(c)}</span>`).join('');
+      } else {
+        conSec.style.display = 'none';
+      }
+
+      // Metrics
+      const metSec = document.getElementById('pv-metrics-section');
+      const metEl = document.getElementById('pv-metrics');
+      if (s.metrics.length) {
+        metSec.style.display = '';
+        metEl.innerHTML = s.metrics.map(m => `<span class="card-tag metric">${esc(m)}</span>`).join('');
+      } else {
+        metSec.style.display = 'none';
+      }
+
+      // Notes
+      const noteSec = document.getElementById('pv-notes-section');
+      const noteEl = document.getElementById('pv-notes');
+      if (s.notes.trim()) {
+        noteSec.style.display = '';
+        noteEl.textContent = s.notes;
+      } else {
+        noteSec.style.display = 'none';
+      }
+    }
+
+    /* ── Prompt ─────────────────────────────────────────────────────── */
+    function updatePrompt() {
+      const s = state, d = DEFAULTS, parts = [];
+
+      if (!s.featureName && !s.problem && !s.proposal && !s.notes
+          && s.targetUser === d.targetUser && s.priority === d.priority
+          && s.scope === d.scope && !s.constraints.length && !s.metrics.length) {
+        document.getElementById('prompt-text').textContent = 'Empty brainstorm — add a feature name and problem to get started.';
+        return;
+      }
+
+      if (s.featureName) parts.push(`Feature: ${s.featureName}`);
+      if (s.problem) parts.push(`Problem: ${s.problem}`);
+      if (s.proposal) parts.push(`Proposal: ${s.proposal}`);
+
+      const ctx = [];
+      if (s.priority !== d.priority) ctx.push(`${s.priority.toLowerCase()} priority`);
+      if (s.targetUser !== d.targetUser) ctx.push(`targeting ${s.targetUser.toLowerCase()}`);
+      if (ctx.length) parts.push(`This is a ${ctx.join(', ')} feature.`);
+
+      if (s.scope !== d.scope) {
+        const desc = { 1:'a quick fix — minimal scope', 2:'a small task — limited scope', 4:'a project-scale effort — significant scope', 5:'an epic — large, multi-phase scope' };
+        if (desc[s.scope]) parts.push(`Scope: ${desc[s.scope]}.`);
+      }
+      if (s.constraints.length) parts.push(`Constraints: ${s.constraints.join(', ')}.`);
+      if (s.metrics.length) parts.push(`Success metrics: ${s.metrics.join(', ')}.`);
+      if (s.notes.trim()) parts.push(`Notes: ${s.notes.trim()}`);
+
+      document.getElementById('prompt-text').textContent = parts.join('\n');
+    }
+
+    function updateAll() { renderPreview(); updatePrompt(); }
+
+    /* ── Panels ────────────────────────────────────────────────────── */
+    function showPanel(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+      const tp = document.getElementById('panel-' + name) || document.querySelector('.' + name + '.panel');
+      if (tp) tp.classList.add('active');
+      const tt = document.querySelector(`.panel-tab[data-panel="${name}"]`);
+      if (tt) tt.classList.add('active');
+      document.body.setAttribute('data-active-panel', name);
+    }
+
+    /* ── Copy ──────────────────────────────────────────────────────── */
+    function copyPrompt() {
+      const text = document.getElementById('prompt-text').textContent;
+      const btn = document.getElementById('copy-btn');
+      const done = () => { btn.textContent = '✓ COPIED'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1500); };
+      const fallback = () => { const t = document.createElement('textarea'); t.value = text; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.focus(); t.select(); try { document.execCommand('copy'); done(); } catch(e){} document.body.removeChild(t); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(fallback);
+      else fallback();
+    }
+
+    /* ── Init ──────────────────────────────────────────────────────── */
+    buildPresets();
+    buildControls();
+    updateAll();
+  </script>
+</body>
+</html>
