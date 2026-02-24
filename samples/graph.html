@@ -422,38 +422,40 @@
     };
 
     function updatePrompt() {
-      const visibleLayers = Object.entries(state.layers).filter(([,v]) => v).map(([k]) => LAYER_NAMES[k]);
-      const hiddenLayers = Object.entries(state.layers).filter(([,v]) => !v).map(([k]) => LAYER_NAMES[k]);
-      const visibleConns = Object.entries(state.connections).filter(([,v]) => v).map(([k]) => CONN_STYLES[k].label);
-      const comments = Object.entries(state.comments);
-
+      const annotated = Object.entries(state.comments).filter(([, v]) => v && v.trim());
       const parts = [];
-      if (hiddenLayers.length > 0 && visibleLayers.length < 5) {
-        parts.push(`The system architecture focuses on the ${visibleLayers.join(', ')} layer${visibleLayers.length > 1 ? 's' : ''}.`);
-      } else {
-        parts.push('The full system architecture is shown.');
-      }
 
-      for (const [layerKey, visible] of Object.entries(state.layers)) {
-        if (!visible) continue;
-        const layerNodes = NODES.filter(n => n.layer === layerKey);
-        if (layerNodes.length > 0) {
-          parts.push(`The ${LAYER_NAMES[layerKey]} layer includes: ${layerNodes.map(n => n.name).join(', ')}.`);
-        }
-      }
-
-      if (comments.length > 0) {
-        for (const [id, text] of comments) {
+      // Lead with action items — the user wrote these specifically for the agent
+      if (annotated.length > 0) {
+        const items = annotated.map(([id, text]) => {
           const node = NODES.find(n => n.id === id);
-          parts.push(`${node.name} (note: ${text}).`);
-        }
+          return `- ${node ? node.name : id}: ${text.trim()}`;
+        });
+        parts.push('Action items:\n' + items.join('\n'));
       }
 
-      if (visibleConns.length < 4) {
-        parts.push(`Visible connection types: ${visibleConns.join(', ')}.`);
+      // Architecture as context (not a state description of what's visible)
+      const visibleLayerKeys = Object.entries(state.layers).filter(([, v]) => v).map(([k]) => k);
+      const hiddenLayerNames = Object.entries(state.layers).filter(([, v]) => !v).map(([k]) => LAYER_NAMES[k]);
+
+      if (visibleLayerKeys.length > 0) {
+        const layerLines = visibleLayerKeys.map(k => {
+          const nodes = NODES.filter(n => n.layer === k).map(n => n.name).join(', ');
+          return `- ${LAYER_NAMES[k]}: ${nodes}`;
+        });
+        const focusNote = hiddenLayerNames.length > 0 ? ` (${hiddenLayerNames.join(', ')} layers hidden)` : '';
+        parts.push(`Architecture context${focusNote}:\n` + layerLines.join('\n'));
       }
 
-      document.getElementById('prompt-text').textContent = parts.length > 1 ? parts.join(' ') : 'Full system architecture view — no annotations or focus applied.';
+      const visibleConns = Object.entries(state.connections).filter(([, v]) => v).map(([k]) => CONN_STYLES[k].label);
+      const hiddenConns = Object.entries(state.connections).filter(([, v]) => !v).map(([k]) => CONN_STYLES[k].label);
+      if (hiddenConns.length > 0 && visibleConns.length > 0) {
+        parts.push(`Visible connections: ${visibleConns.join(', ')}. (${hiddenConns.join(', ')} hidden)`);
+      }
+
+      document.getElementById('prompt-text').textContent = parts.length > 0
+        ? parts.join('\n\n')
+        : 'Full system architecture view — no annotations or focus applied.';
     }
 
     function copyPrompt() {

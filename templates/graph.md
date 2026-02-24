@@ -93,19 +93,27 @@ If no codebase context is available, generate a **sample architecture** (e.g., a
 
 ## Prompt rules
 
-Generate a structured architecture description. Only mention visible (checked) layers and annotated components.
+Generate an agent-actionable prompt: lead with any action items, then provide architecture as context. The agent receiving this has no browser — the prompt must stand alone.
 
 Structure:
 
-1. Start with "The system architecture consists of" or "Update the architecture:"
-2. List visible layers and their components: "The client layer includes a React SPA and a service worker"
-3. Highlight annotated components with user's comments: "The API Gateway (note: needs rate limiting) connects to..."
-4. Describe visible connection patterns: "The client communicates with the server via REST and WebSocket"
-5. If specific layers are hidden, note the focus: "Focusing on the client and server layers"
-6. If all defaults with no comments, output: "Full system architecture view — no annotations or focus applied."
+1. If there are annotations, lead with "Action items:" followed by a bullet list of `- ComponentName: annotation text`
+2. Follow with "Architecture context" plus a parenthetical note if any layers are hidden: "Architecture context (Data, External layers hidden):"
+3. List each visible layer as a bullet: `- LayerName: ComponentA, ComponentB`
+4. If some connections are filtered, note which are visible: "Visible connections: HTTP/REST, WebSocket. (DB Query, Event/Msg hidden)"
+5. If all defaults with no annotations, output: "Full system architecture view — no annotations or focus applied."
 
 Example prompt output:
-> "The system architecture focuses on the server and data layers. The Express API server connects to PostgreSQL via database queries and to Redis via a pub/sub event channel. The API Gateway (note: needs rate limiting) serves as the entry point. Update the API Gateway to include request throttling middleware."
+```
+Action items:
+- API Gateway: needs rate limiting
+- PostgreSQL: add read replicas for scaling
+
+Architecture context (External layer hidden):
+- Client: React SPA, Service Worker, Mobile App
+- Server: API Gateway, Express API, Auth Service
+- Data: PostgreSQL, Redis Cache
+```
 
 ## Presets
 

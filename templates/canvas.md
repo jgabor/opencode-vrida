@@ -62,19 +62,28 @@ Below the three states, show a **CSS output** block (monospace, small font) disp
 
 ## Prompt rules
 
-Generate a natural-language design specification. Only mention values that differ from defaults.
+Generate a CSS prompt that an agent can directly apply. Only output properties that differ from defaults.
 
 Structure:
 
-1. Start with "Design a button with" or "Update the button to use"
-2. Group related changes: "rounded corners (12px radius) with generous padding (16px 24px)"
-3. Use qualitative language: "a pronounced shadow", "bold weight", "tight letter spacing"
-4. If colors changed, describe them: "a deep blue background (#1e40af) with white text"
-5. End with any effect changes: "with a smooth 300ms transition"
-6. If all defaults, output: "Default button styling — no changes specified."
+1. If any values changed, output: "Apply these CSS properties to the button component:" followed by a `.button { ... }` CSS block with only the changed properties
+2. Use exact CSS values — `border-radius: 12px`, `padding: 14px 28px`, `background: #1e40af` — not qualitative descriptions
+3. If all defaults, output: "Default button styling — no changes specified."
 
 Example prompt output:
-> "Design a button with rounded corners (12px radius), a deep blue background (#1e40af) with white text, bold weight, and a pronounced shadow. Add a smooth 300ms hover transition."
+```
+Apply these CSS properties to the button component:
+
+.button {
+  border-radius: 12px;
+  padding: 14px 28px;
+  background: #1e40af;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: all 300ms ease;
+}
+```
 
 ## Presets
 
@@ -86,7 +95,7 @@ Example prompt output:
 
 ## Mistakes to avoid
 
-- **Showing raw hex values in prompt** — Say "a warm orange (#f97316)" not just "#f97316".
+- **Describing visual appearance instead of CSS values** — Output `background: #f97316` not "a warm orange background". The agent cannot see the preview; it needs exact values.
 - **Ignoring hover state** — Always show the hover variant in the preview. Users need to see both states.
 - **Color sliders without preview swatch** — Show a color swatch next to every color control.
 - **Not reflecting CSS output** — The CSS block in the preview must update live and match the visual rendering exactly.

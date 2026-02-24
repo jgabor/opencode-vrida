@@ -73,7 +73,7 @@ These apply to every rig, no exceptions. Think of them as the warranty condition
 
 **Instant feedback.** Every control change updates the preview and the prompt immediately. No "Apply" buttons. No lag. The user moves a slider — the preview moves with it.
 
-**Useful prompts, not data dumps.** The prompt output reads like a sentence a human would write: _"Use a 12px border-radius with a subtle drop shadow and the secondary color palette."_ Never output raw key-value pairs like `borderRadius: 12, shadow: true`.
+**Useful prompts, not data dumps.** The prompt must be actionable and self-contained — the agent that receives it has no access to the browser. Output concrete implementation values (CSS properties, specs, tokens) rather than visual descriptions. Frame changes as instructions, not observations: `Apply border-radius: 12px` not `The corners look rounded`. Never output raw key-value pairs like `borderRadius: 12, shadow: true` and never describe what is visually visible without providing the values needed to reproduce it.
 
 **Copy that actually works.** A copy button grabs the prompt text, shows "Copied!" for ~1.5 seconds, then resets. Include a `document.execCommand('copy')` fallback for environments where `navigator.clipboard` isn't available.
 
@@ -238,22 +238,26 @@ function applyPreset(name) {
 
 ### Prompt generation
 
-Only mention what the user actually changed. Skip defaults — nobody needs to be told "keep doing what you were doing." Use descriptive language alongside numbers.
+Only mention what the user actually changed. Skip defaults — nobody needs to be told "keep doing what you were doing." For design rigs, output concrete implementation values (CSS properties, tokens, specs) rather than prose descriptions. The agent receiving the prompt has no browser — it cannot see the preview. Give it values it can apply directly.
 
 ```javascript
 function generatePrompt() {
-  const diffs = [];
+  const lines = ['.component {'];
 
   if (state.radius !== DEFAULTS.radius) {
-    diffs.push(`a border-radius of ${state.radius}px`);
+    lines.push(`  border-radius: ${state.radius}px;`);
   }
 
-  if (state.shadow === 'heavy') diffs.push('a heavy drop shadow');
-  else if (state.shadow === 'subtle') diffs.push('a subtle drop shadow');
+  const SHADOW_VALUES = { none: 'none', subtle: '0 2px 6px rgba(0,0,0,0.15)', heavy: '0 8px 24px rgba(0,0,0,0.35)' };
+  if (state.shadow !== DEFAULTS.shadow) {
+    lines.push(`  box-shadow: ${SHADOW_VALUES[state.shadow]};`);
+  }
 
-  const output = diffs.length > 0
-    ? `Update the component to use ${diffs.join(', ')}.`
-    : 'All defaults — no changes to apply.';
+  lines.push('}');
+
+  const output = lines.length > 2
+    ? `Apply these CSS changes to the component:\n\n${lines.join('\n')}`
+    : 'No changes from defaults.';
 
   document.getElementById('prompt-text').textContent = output;
 }
@@ -346,7 +350,7 @@ These are the most common ways a rig goes from delightful to broken. Avoid them.
 | Preview lags behind controls | A control isn't calling `updateAll()` on change |
 | Blank or broken on first load | Missing defaults — every value needs a sensible starting point |
 | Rig breaks offline | You added a CDN link or external dependency |
-| Prompt is useless without the rig open | Add enough context to act on independently |
+| Prompt is useless without the rig open | Output concrete values (CSS, specs) not visual descriptions — the agent cannot see the preview |
 | Copy does nothing on Firefox iOS | Missing `document.execCommand('copy')` fallback |
 | Preset changes state but controls don't move | `syncControlsToState()` is missing or incomplete |
 | No "Copied!" flash | Users click and wonder if anything happened |
