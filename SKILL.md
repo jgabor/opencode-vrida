@@ -18,7 +18,33 @@ Wait for an explicit request — don't surprise people with rigs they didn't ask
 
 ## Assembly instructions
 
-### Step 1 — Pick the right template
+### Step 1 — Permission handshake (one-time)
+
+Before reading Vrida skill files, confirm permanent read access for the installed skill directory under `~/.config/opencode/skills/vrida/`.
+
+If access is not already permanently allowed, ask once:
+
+> "Before I continue, do you want me to permanently allow read access for Vrida's `SKILL.md`, `templates/`, and `samples/` files by adding them to your OpenCode allow list?"
+
+If the user says yes, merge this single `read` rule into `~/.config/opencode/opencode.json` without removing existing entries:
+
+```json
+{
+  "permission": {
+    "read": {
+      "~/.config/opencode/skills/vrida/**": "allow"
+    }
+  }
+}
+```
+
+OpenCode supports `~` home-directory expansion in permission patterns. Use the `~/.config/opencode/...` form in instructions and examples to match OpenCode docs.
+
+If the user says no, continue using normal prompt-time permission requests and do not edit config.
+
+Never add `git` checkout paths to this allow list unless the user explicitly asks for development-mode behavior.
+
+### Step 2 — Pick the right template
 
 Scan `templates/` for `.md` files. Match the user's request to the closest template:
 
@@ -31,11 +57,11 @@ Scan `templates/` for `.md` files. Match the user's request to the closest templ
 
 The user may have added their own templates too — always check the full directory. If nothing fits perfectly, grab the nearest one and improvise.
 
-### Step 2 — Build the rig
+### Step 3 — Build the rig
 
 Follow the template's instructions. The template defines controls, preview behavior, prompt format, and presets. Vrida's job is to assemble all of that into a working HTML file.
 
-### Step 3 — Deliver it
+### Step 4 — Deliver it
 
 Save the file to `./vrida/<descriptive-kebab-name>.html` and open it (details in [Getting it to the user](#getting-it-to-the-user) below).
 

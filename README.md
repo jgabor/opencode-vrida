@@ -1,12 +1,37 @@
 # opencode-vrida
 
-**Vrida** - Visual rig for interactive design adjustment. Assemble-it-yourself interactive tools for [OpenCode](https://opencode.ai).
+**Vrida** — Visual Rig for Interactive Design Adjustment. An [OpenCode](https://opencode.ai) skill that assembles single-file HTML rigs: controls on the left, a live preview on the right, and a copyable prompt at the bottom. Tweak knobs and sliders, watch the preview react instantly, copy the result, paste it back into your conversation. Visual tinkering, assembled to order.
 
 One file. Zero dependencies. No allen key required.
 
-![Vrida in action — the brainstorm rig](assets/screenshot.png)
+## See it in action
 
-Vrida is a rig factory. You tell OpenCode what you need, and it assembles a single HTML file — controls on the left, a live preview on the right, and a copyable prompt at the bottom. Fiddle with knobs and sliders, watch the preview react instantly, copy the result, paste it back. Visual tinkering, assembled for your convenience.
+![Vrida demo](assets/demo-recording.webp)
+
+<details>
+<summary>More screenshots</summary>
+
+**Architecture diagram (graph template)**
+
+![Architecture diagram rig built with the graph template](assets/screenshot-codebase-explorer.png)
+
+**Feature planning (brainstorm template)**
+
+![Feature brainstorm rig built with the brainstorm template](assets/screenshot-feature-brainstorm.png)
+
+</details>
+
+---
+
+## Features
+
+- **One file, zero dependencies** — Everything lives in a single `.html`. No CDN links, no imports, no fetches. Works offline. Survives the apocalypse.
+- **Instant feedback** — Every control change updates the preview immediately. No "Apply" button. No waiting.
+- **Smart prompts** — The output reads like a sentence a human would write, not a JSON dump. Only values that differ from defaults are mentioned.
+- **Presets** — 3–5 named configurations per rig. Quick starting points so you're never staring at a blank canvas.
+- **Dark theme** — Consistent, minimal design. Easy on the eyes at 2 AM.
+- **HTTP server** — Optional network serving for SSH and remote access (auto-detects Python or Node).
+- **Mobile friendly** — Side-by-side panels on desktop, tabbed UI on small screens.
 
 ---
 
@@ -20,7 +45,7 @@ Every rig starts from a template. These ship out of the box:
 | -------------- | ----------------------------------------------------------------------------------------------------------------- |
 | **canvas**     | Visual design workbench — buttons, cards, layouts, spacing, color, typography. Drag sliders until it looks right. |
 | **graph**      | Architecture diagrams — components, data flow, layer maps. Point, connect, annotate.                              |
-| **review**     | Document review station — approve, reject, comment. Red pen sold separately.                                      |
+| **review**     | Document review station — approve, reject, comment on specs, RFCs, or READMEs. Red pen sold separately.           |
 | **brainstorm** | Structured ideation rig — constraints, metrics, feature cards. Think inside the box, then break it.               |
 
 ### Samples
@@ -73,18 +98,6 @@ Vrida will:
 2. Assemble a single-file HTML rig
 3. Save it to `./vrida/<name>.html`
 4. Open it in your browser (or serve it over HTTP for remote access)
-
----
-
-## Features
-
-- **One file, zero dependencies** — Everything lives in a single `.html`. Works offline. Survives the apocalypse.
-- **Instant feedback** — Every control change updates the preview immediately. No "Apply" button. No waiting.
-- **Smart prompts** — The output reads like a sentence a human would write, not a JSON dump.
-- **Presets** — 3–5 named configurations per rig. Quick starting points so you're never staring at a blank canvas.
-- **Dark theme** — Consistent, minimal design. Easy on the eyes at 2 AM.
-- **HTTP server** — Optional network serving for SSH and remote access (auto-detects Python or Node).
-- **Mobile-friendly** — Side-by-side on desktop, tabbed UI on small screens.
 
 ---
 
